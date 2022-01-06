@@ -14,7 +14,7 @@ import (
 	"github.com/marcinbor85/pubkey/log"
 	"github.com/marcinbor85/pubkey/database"
 	"github.com/marcinbor85/pubkey/email"
-	
+
 	mUser "github.com/marcinbor85/pubkey/models/user"
 
 	"text/template"
@@ -22,28 +22,28 @@ import (
 	"regexp"
 )
 
-const NICKNAME_REGEX string = `[a-zA-Z0-9_-]{3,}`
+const USERNAME_REGEX string = `[a-zA-Z0-9_-]{3,}`
 const ENDPOINT_NAME string = "user"
 
-func validateNickname(nickname string) bool {
-	rule := "^" + NICKNAME_REGEX + "$"
+func validateUsername(username string) bool {
+	rule := "^" + USERNAME_REGEX + "$"
 	re := regexp.MustCompile(rule)
-	return re.MatchString(nickname)
+	return re.MatchString(username)
 }
 
 func Register(router *mux.Router) {
 	router.HandleFunc("/" + ENDPOINT_NAME, addEndpoint).Methods(http.MethodPost)
 
-	path := "/" + ENDPOINT_NAME + "/" + "{nickname:" + NICKNAME_REGEX + "}"
+	path := "/" + ENDPOINT_NAME + "/" + "{username:" + USERNAME_REGEX + "}"
 	router.HandleFunc(path, getEndpoint).Methods(http.MethodGet)
 
-	path = "/" + ENDPOINT_NAME + "/" + "{nickname:" + NICKNAME_REGEX + "}/{token}"
+	path = "/" + ENDPOINT_NAME + "/" + "{username:" + USERNAME_REGEX + "}/{token}"
 	router.HandleFunc(path, tokenEndpoint).Methods(http.MethodGet)
 }
 
 func addEndpoint(w http.ResponseWriter, r *http.Request) {
 	type RegisterUser struct {
-		Nickname  string `json:"nickname"`
+		Username  string `json:"username"`
 		Email     string `json:"email"`
 		PublicKey string `json:"public_key"`
 	}
@@ -56,9 +56,9 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok := validateNickname(u.Nickname)
+	ok := validateUsername(u.Username)
 	if ok == false {
-		http.Error(w, "nickname validation error", http.StatusBadRequest)
+		http.Error(w, "username validation error", http.StatusBadRequest)
 		return
 	}
 
@@ -68,7 +68,7 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := mUser.Add(database.DB, u.Nickname, u.Email, u.PublicKey)
+	user, err := mUser.Add(database.DB, u.Username, u.Email, u.PublicKey)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -82,7 +82,7 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type EmailContext struct {
-		Nickname string
+		Username string
 		APILink string
 		ActivateLink string
 		DeleteLink string
@@ -96,10 +96,10 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 	host := config.Get("HOST")
 
 	context := EmailContext{
-		Nickname: user.Nickname,
-		APILink: strings.Join([]string{host, ENDPOINT_NAME, user.Nickname}, "/"),
-		ActivateLink: strings.Join([]string{host, ENDPOINT_NAME, user.Nickname, user.ActivateToken}, "/"),
-		DeleteLink: strings.Join([]string{host, ENDPOINT_NAME, user.Nickname, user.DeleteToken}, "/"),
+		Username: user.Username,
+		APILink: strings.Join([]string{host, ENDPOINT_NAME, user.Username}, "/"),
+		ActivateLink: strings.Join([]string{host, ENDPOINT_NAME, user.Username, user.ActivateToken}, "/"),
+		DeleteLink: strings.Join([]string{host, ENDPOINT_NAME, user.Username, user.DeleteToken}, "/"),
 	}
 
 	var msgBuffer bytes.Buffer
@@ -109,7 +109,7 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	em := &email.Email{
-		ToName:    u.Nickname,
+		ToName:    u.Username,
 		ToEmail:   u.Email,
 		FromName:  config.Get("TEXT_EMAIL_SENDER"),
 		FromEmail: config.Get("SMTP_EMAIL"),
@@ -124,9 +124,9 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func getEndpoint(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	nickname := params["nickname"]
+	username := params["username"]
 
-	user, err := mUser.GetByNickname(database.DB, nickname)
+	user, err := mUser.GetByUsername(database.DB, username)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -139,16 +139,16 @@ func getEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
-	d := map[string]string{"nickname": user.Nickname, "public_key": user.PublicKey}
+	d := map[string]string{"username": user.Username, "public_key": user.PublicKey}
 	enc.Encode(d)
 }
 
 func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	nickname := params["nickname"]
+	username := params["username"]
 	token := params["token"]
 
-	user, err := mUser.GetByNickname(database.DB, nickname)
+	user, err := mUser.GetByUsername(database.DB, username)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -159,7 +159,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		} else {
-			err = mUser.Activate(database.DB, nickname)
+			err = mUser.Activate(database.DB, username)
 			if err != nil {
 				http.NotFound(w, r)
 				return
@@ -172,7 +172,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		} else {
-			err = mUser.Delete(database.DB, nickname)
+			err = mUser.Delete(database.DB, username)
 			if err != nil {
 				http.NotFound(w, r)
 				return

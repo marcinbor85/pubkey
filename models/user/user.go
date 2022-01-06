@@ -9,7 +9,7 @@ import (
 
 type User struct {
 	Id            int64
-	Nickname      string
+	Username      string
 	Email         string
 	PublicKey     string
 	Active        bool
@@ -21,7 +21,7 @@ type User struct {
 func CreateTable(db *sql.DB) error {
 	sqlText := `CREATE TABLE TblUser (
 		"Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,		
-		"Nickname" TEXT,
+		"Username" TEXT,
 		"Email" TEXT,
 		"PublicKey" TEXT,
 		"Active" INTEGER DEFAULT 0,
@@ -41,13 +41,13 @@ func CreateTable(db *sql.DB) error {
 	return nil
 }
 
-func Add(db *sql.DB, nickname string, email string, publickey string) (*User, error) {
-	u, _ := GetByNickname(db, nickname)
+func Add(db *sql.DB, username string, email string, publickey string) (*User, error) {
+	u, _ := GetByUsername(db, username)
 	if u != nil {
 		return nil, errors.New("user already exist")
 	}
 
-	sqlText := `INSERT INTO TblUser (Nickname, Email, PublicKey, ActivateToken, DeleteToken) VALUES (?,?,?,?,?)`
+	sqlText := `INSERT INTO TblUser (Username, Email, PublicKey, ActivateToken, DeleteToken) VALUES (?,?,?,?,?)`
 	st, err := db.Prepare(sqlText)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func Add(db *sql.DB, nickname string, email string, publickey string) (*User, er
 
 	user := &User{
 		Id:            -1,
-		Nickname:      nickname,
+		Username:      username,
 		Email:         email,
 		PublicKey:     publickey,
 		Active:        false,
@@ -70,7 +70,7 @@ func Add(db *sql.DB, nickname string, email string, publickey string) (*User, er
 		DeleteToken:   delToken,
 	}
 
-	res, err := st.Exec(user.Nickname, user.Email, user.PublicKey, user.ActivateToken, user.DeleteToken)
+	res, err := st.Exec(user.Username, user.Email, user.PublicKey, user.ActivateToken, user.DeleteToken)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +84,8 @@ func Add(db *sql.DB, nickname string, email string, publickey string) (*User, er
 	return user, nil
 }
 
-func GetByNickname(db *sql.DB, nickname string) (*User, error) {
-	sqlText := `SELECT * FROM TblUser WHERE Deleted = 0 AND Nickname = ?`
+func GetByUsername(db *sql.DB, username string) (*User, error) {
+	sqlText := `SELECT * FROM TblUser WHERE Deleted = 0 AND Username = ?`
 	st, err := db.Prepare(sqlText)
 
 	if err != nil {
@@ -93,22 +93,22 @@ func GetByNickname(db *sql.DB, nickname string) (*User, error) {
 	}
 
 	user := &User{}
-	err = st.QueryRow(nickname).Scan(&user.Id, &user.Nickname, &user.Email, &user.PublicKey, &user.Active, &user.Deleted, &user.ActivateToken, &user.DeleteToken)
+	err = st.QueryRow(username).Scan(&user.Id, &user.Username, &user.Email, &user.PublicKey, &user.Active, &user.Deleted, &user.ActivateToken, &user.DeleteToken)
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func Activate(db *sql.DB, nickname string) error {
-	sqlText := `UPDATE TblUser SET Active = 1 WHERE Nickname = ? AND Deleted = 0`
+func Activate(db *sql.DB, username string) error {
+	sqlText := `UPDATE TblUser SET Active = 1 WHERE Username = ? AND Deleted = 0`
 	st, err := db.Prepare(sqlText)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = st.Exec(nickname)
+	_, err = st.Exec(username)
 	if err != nil {
 		return err
 	}
@@ -116,15 +116,15 @@ func Activate(db *sql.DB, nickname string) error {
 	return nil
 }
 
-func Delete(db *sql.DB, nickname string) error {
-	sqlText := `UPDATE TblUser SET Deleted = 1 WHERE Nickname = ? AND Deleted = 0`
+func Delete(db *sql.DB, username string) error {
+	sqlText := `UPDATE TblUser SET Deleted = 1 WHERE Username = ? AND Deleted = 0`
 	st, err := db.Prepare(sqlText)
 
 	if err != nil {
 		return err
 	}
 
-	_, err = st.Exec(nickname)
+	_, err = st.Exec(username)
 	if err != nil {
 		return err
 	}
