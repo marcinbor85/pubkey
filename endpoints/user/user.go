@@ -31,6 +31,22 @@ func validateUsername(username string) bool {
 	return re.MatchString(username)
 }
 
+func validateEmail(email string) bool {
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return false
+	}
+	user := parts[0]
+	if len(user) < 1 {
+		return false
+	}
+	domain := parts[1]
+	if len(domain) < 1 {
+		return false
+	}
+	return true
+}
+
 func Register(router *mux.Router) {
 	router.HandleFunc("/" + ENDPOINT_NAME, addEndpoint).Methods(http.MethodPost)
 
@@ -59,6 +75,12 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 	ok := validateUsername(u.Username)
 	if ok == false {
 		http.Error(w, "username validation error", http.StatusBadRequest)
+		return
+	}
+
+	ok = validateEmail(u.Email)
+	if ok == false {
+		http.Error(w, "email validation error", http.StatusBadRequest)
 		return
 	}
 
