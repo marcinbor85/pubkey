@@ -14,6 +14,8 @@ import (
 )
 
 func main() {
+	config.Init(".env")
+	
 	lvl, _ := strconv.Atoi(config.Get("LOG_LEVEL"))
 	log.Init(log.LogLevel(lvl))
 	
