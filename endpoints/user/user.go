@@ -69,6 +69,8 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	var u RegisterUser
 
+	log.D("request addEndpoint")
+
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -98,6 +100,8 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	log.I("user added: %s", user.Username)
 
 	client := &email.Client{
 		Email:    config.Get("SMTP_EMAIL"),
@@ -154,6 +158,8 @@ func getEndpoint(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	username := params["username"]
 
+	log.D("request getEndpoint: %s", username)
+
 	user, err := mUser.GetByUsername(database.DB, username)
 	if err != nil {
 		http.NotFound(w, r)
@@ -175,6 +181,8 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	username := params["username"]
 	token := params["token"]
+
+	log.D("request tokenEndpoint: %s", username)
 
 	user, err := mUser.GetByUsername(database.DB, username)
 	if err != nil {
@@ -200,6 +208,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			log.I("user activated: %s", username)
 			fmt.Fprintln(w, "user activated")
 		}
 	} else {
@@ -213,6 +222,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			log.I("user deleted: %s", username)
 			fmt.Fprintln(w, "user deleted")
 		}
 	}
