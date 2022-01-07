@@ -3,20 +3,26 @@ package user
 import (
 	"database/sql"
 	"encoding/base64"
-	"errors"
 	"math/rand"
+	"errors"
+	"time"
+
+	"github.com/marcinbor85/pubkey/log"
 )
 
 type User struct {
-	Id            int64
-	Username      string
-	Email         string
-	PublicKey     string
-	Active        bool
-	Deleted       bool
-	ActivateToken string
-	DeleteToken   string
+	Id             int64
+	Username       string
+	Email          string
+	PublicKey      string
+	Active         bool
+	Deleted        bool
+	ActivateToken  string
+	DeleteToken    string
+	CreateDatetime time.Time
 }
+
+const DATETIME_LAYOUT string = "2006-01-02 15:04:05"
 
 func CreateTable(db *sql.DB) error {
 	sqlText := `CREATE TABLE TblUser (
@@ -27,29 +33,33 @@ func CreateTable(db *sql.DB) error {
 		"Active" INTEGER DEFAULT 0,
 		"Deleted" INTEGER DEFAULT 0,
 		"ActivateToken" TEXT,
-		"DeleteToken" TEXT
+		"DeleteToken" TEXT,
+		"CreateDatetime" TEXT DEFAULT (DATETIME('NOW'))
 	);`
 
 	st, err := db.Prepare(sqlText)
 	if err != nil {
+		log.E(err.Error())
 		return err
 	}
 	_, err = st.Exec()
 	if err != nil {
+		log.E(err.Error())
 		return err
 	}
 	return nil
 }
 
 func Add(db *sql.DB, username string, email string, publickey string) (*User, error) {
-	u, _ := GetByUsername(db, username)
-	if u != nil {
+	user, err := GetByUsername(db, username)
+	if user != nil {
 		return nil, errors.New("user already exist")
 	}
 
 	sqlText := `INSERT INTO TblUser (Username, Email, PublicKey, ActivateToken, DeleteToken) VALUES (?,?,?,?,?)`
 	st, err := db.Prepare(sqlText)
 	if err != nil {
+		log.E(err.Error())
 		return nil, err
 	}
 
@@ -59,44 +69,47 @@ func Add(db *sql.DB, username string, email string, publickey string) (*User, er
 	rand.Read(tokenArray)
 	delToken := base64.URLEncoding.EncodeToString(tokenArray)
 
-	user := &User{
-		Id:            -1,
-		Username:      username,
-		Email:         email,
-		PublicKey:     publickey,
-		Active:        false,
-		Deleted:       false,
-		ActivateToken: actToken,
-		DeleteToken:   delToken,
-	}
-
-	res, err := st.Exec(user.Username, user.Email, user.PublicKey, user.ActivateToken, user.DeleteToken)
+	_, err = st.Exec(username, email, publickey, actToken, delToken)
 	if err != nil {
+		log.E(err.Error())
 		return nil, err
 	}
 
-	id, err := res.LastInsertId()
-	if err != nil {
-		return nil, err
-	}
-
-	user.Id = id
+	user, _ = GetByUsername(db, username)
 	return user, nil
 }
 
 func GetByUsername(db *sql.DB, username string) (*User, error) {
 	sqlText := `SELECT * FROM TblUser WHERE Deleted = 0 AND Username = ?`
 	st, err := db.Prepare(sqlText)
-
 	if err != nil {
+		log.E(err.Error())
 		return nil, err
 	}
+
+	var createDatetime string
 
 	user := &User{}
-	err = st.QueryRow(username).Scan(&user.Id, &user.Username, &user.Email, &user.PublicKey, &user.Active, &user.Deleted, &user.ActivateToken, &user.DeleteToken)
+	err = st.QueryRow(username).Scan(
+		&user.Id,
+		&user.Username,
+		&user.Email,
+		&user.PublicKey,
+		&user.Active,
+		&user.Deleted,
+		&user.ActivateToken,
+		&user.DeleteToken,
+		&createDatetime,
+	)
 	if err != nil {
 		return nil, err
 	}
+	parsedCreateDatetime, e := time.Parse(DATETIME_LAYOUT, createDatetime)
+	if e != nil {
+		log.E(e.Error())
+		return nil, e
+	}
+	user.CreateDatetime = parsedCreateDatetime
 	return user, nil
 }
 
@@ -105,11 +118,13 @@ func Activate(db *sql.DB, username string) error {
 	st, err := db.Prepare(sqlText)
 
 	if err != nil {
+		log.E(err.Error())
 		return err
 	}
 
 	_, err = st.Exec(username)
 	if err != nil {
+		log.E(err.Error())
 		return err
 	}
 
@@ -121,11 +136,13 @@ func Delete(db *sql.DB, username string) error {
 	st, err := db.Prepare(sqlText)
 
 	if err != nil {
+		log.E(err.Error())
 		return err
 	}
 
 	_, err = st.Exec(username)
 	if err != nil {
+		log.E(err.Error())
 		return err
 	}
 
