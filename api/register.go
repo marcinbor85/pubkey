@@ -1,35 +1,35 @@
 package api
 
 import (
+	"bytes"
+	"errors"
 	"io"
 	"net/http"
-	"bytes"
 	"strings"
-	"errors"
 
 	"encoding/json"
 )
 
 type RegisterUsernameRequest struct {
-	Username string		`json:"username"`
-	PublicKey string	`json:"public_key"`
-	Email string		`json:"email"`
+	Username  string `json:"username"`
+	PublicKey string `json:"public_key"`
+	Email     string `json:"email"`
 }
 
 func (client *Client) RegisterNewUsername(username string, email string, publicKey string) *RequestError {
 	url := strings.Join([]string{client.Address, "user"}, "/")
 	req := &RegisterUsernameRequest{
-		Username: username,
+		Username:  username,
 		PublicKey: publicKey,
-		Email: email,
+		Email:     email,
 	}
 	reqJson, err := json.Marshal(req)
-    if err != nil {
+	if err != nil {
 		return &RequestError{500, err}
-    }
+	}
 
 	reqBody := bytes.NewBuffer(reqJson)
-    resp, err := http.Post(url, "application/json", reqBody)
+	resp, err := http.Post(url, "application/json", reqBody)
 	if err != nil {
 		return &RequestError{500, err}
 	}

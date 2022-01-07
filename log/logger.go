@@ -15,11 +15,11 @@ var (
 type LogLevel int
 
 const (
-	Off LogLevel = -1
-	Error   	 = 0
-	Warning 	 = 10
-	Info    	 = 20
-	Debug   	 = 30
+	Off     LogLevel = -1
+	Error            = 0
+	Warning          = 10
+	Info             = 20
+	Debug            = 30
 )
 
 var currentLogLevel LogLevel = Info

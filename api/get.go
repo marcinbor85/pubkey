@@ -1,10 +1,10 @@
 package api
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"strings"
-	"errors"
 
 	"crypto/rsa"
 	"encoding/json"
@@ -13,8 +13,8 @@ import (
 )
 
 type GetPublicKeyResponse struct {
-	Username string		`json:"username"`
-	PublicKey string	`json:"public_key"`
+	Username  string `json:"username"`
+	PublicKey string `json:"public_key"`
 }
 
 func (client *Client) GetPublicKeyByUsername(username string) (*rsa.PublicKey, *RequestError) {
@@ -34,10 +34,10 @@ func (client *Client) GetPublicKeyByUsername(username string) (*rsa.PublicKey, *
 		return nil, &RequestError{resp.StatusCode, errors.New(string(bodyBytes))}
 	}
 
-	var data GetPublicKeyResponse 
+	var data GetPublicKeyResponse
 
-	err = json.NewDecoder(resp.Body).Decode(&data);
-	if  err != nil {
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
 		return nil, &RequestError{resp.StatusCode, err}
 	}
 
@@ -46,7 +46,7 @@ func (client *Client) GetPublicKeyByUsername(username string) (*rsa.PublicKey, *
 	}
 
 	key, err := crypto.DecodePublicKey(data.PublicKey)
-	if  err != nil {
+	if err != nil {
 		return nil, &RequestError{resp.StatusCode, err}
 	}
 

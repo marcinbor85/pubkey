@@ -1,19 +1,19 @@
 package user
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"strings"
-	"bytes"
 
 	"encoding/json"
 	"github.com/gorilla/mux"
 
 	"github.com/marcinbor85/pubkey/config"
 	"github.com/marcinbor85/pubkey/crypto"
-	"github.com/marcinbor85/pubkey/log"
 	"github.com/marcinbor85/pubkey/database"
 	"github.com/marcinbor85/pubkey/email"
+	"github.com/marcinbor85/pubkey/log"
 
 	mUser "github.com/marcinbor85/pubkey/models/user"
 
@@ -48,7 +48,7 @@ func validateEmail(email string) bool {
 }
 
 func Register(router *mux.Router) {
-	router.HandleFunc("/" + ENDPOINT_NAME, addEndpoint).Methods(http.MethodPost)
+	router.HandleFunc("/"+ENDPOINT_NAME, addEndpoint).Methods(http.MethodPost)
 
 	path := "/" + ENDPOINT_NAME + "/" + "{username:" + USERNAME_REGEX + "}"
 	router.HandleFunc(path, getEndpoint).Methods(http.MethodGet)
@@ -104,24 +104,24 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type EmailContext struct {
-		Username string
-		APILink string
+		Username     string
+		APILink      string
 		ActivateLink string
-		DeleteLink string
+		DeleteLink   string
 	}
-	
+
 	tmpl, err := template.ParseFiles(config.Get("TEMPLATE_WELCOME_EMAIL"))
 	if err != nil {
 		log.E("parsing email template: %s", err.Error())
 	}
-	
+
 	host := config.Get("HOST")
 
 	context := EmailContext{
-		Username: user.Username,
-		APILink: strings.Join([]string{host, ENDPOINT_NAME, user.Username}, "/"),
+		Username:     user.Username,
+		APILink:      strings.Join([]string{host, ENDPOINT_NAME, user.Username}, "/"),
 		ActivateLink: strings.Join([]string{host, ENDPOINT_NAME, user.Username, user.ActivateToken}, "/"),
-		DeleteLink: strings.Join([]string{host, ENDPOINT_NAME, user.Username, user.DeleteToken}, "/"),
+		DeleteLink:   strings.Join([]string{host, ENDPOINT_NAME, user.Username, user.DeleteToken}, "/"),
 	}
 
 	var msgBuffer bytes.Buffer

@@ -6,7 +6,7 @@ import (
 
 type RequestError struct {
 	StatusCode int
-	E error
+	E          error
 }
 
 func (err *RequestError) Error() string {
