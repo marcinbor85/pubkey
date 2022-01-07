@@ -7,10 +7,12 @@ import (
 	"github.com/marcinbor85/pubkey/config"
 	"github.com/marcinbor85/pubkey/crypto"
 	"github.com/marcinbor85/pubkey/database"
+	"github.com/marcinbor85/pubkey/tasks"
 	eUser "github.com/marcinbor85/pubkey/endpoints/user"
 	"github.com/marcinbor85/pubkey/log"
 
 	"github.com/gorilla/mux"
+	"github.com/robfig/cron"
 )
 
 func main() {
@@ -25,6 +27,10 @@ func main() {
 
 	database.Init(config.Get("DATABASE_FILENAME"))
 	defer database.DB.Close()
+
+	c := cron.New()
+	c.AddFunc("0 0 0 * * *", func() { tasks.DeleteExpiredRows(database.DB) })
+	c.Start()
 
 	router := mux.NewRouter()
 
