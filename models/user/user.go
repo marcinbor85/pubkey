@@ -22,8 +22,6 @@ type User struct {
 	CreateDatetime time.Time
 }
 
-const DATETIME_LAYOUT string = "2006-01-02 15:04:05"
-
 func CreateTable(db *sql.DB) error {
 	sqlText := `CREATE TABLE TblUser (
 		"Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,		
@@ -34,7 +32,7 @@ func CreateTable(db *sql.DB) error {
 		"Deleted" INTEGER DEFAULT 0,
 		"ActivateToken" TEXT,
 		"DeleteToken" TEXT,
-		"CreateDatetime" TEXT DEFAULT (DATETIME('NOW'))
+		"CreateDatetime" DATETIME DEFAULT (DATETIME('NOW'))
 	);`
 
 	st, err := db.Prepare(sqlText)
@@ -104,7 +102,7 @@ func GetByUsername(db *sql.DB, username string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	parsedCreateDatetime, e := time.Parse(DATETIME_LAYOUT, createDatetime)
+	parsedCreateDatetime, e := time.Parse(time.RFC3339, createDatetime)
 	if e != nil {
 		log.E(e.Error())
 		return nil, e
