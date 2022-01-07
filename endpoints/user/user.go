@@ -142,7 +142,10 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 		Message:   msgBuffer.String(),
 	}
 
-	_ = client.Send(em)
+	err = client.Send(em)
+	if err != nil {
+		log.E("sending email error: %s", err.Error())
+	}
 
 	w.WriteHeader(http.StatusCreated)
 }
