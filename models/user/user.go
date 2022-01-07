@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"math/rand"
 	"errors"
+	"reflect"
 	"time"
 
 	"github.com/marcinbor85/pubkey/log"
@@ -20,6 +21,16 @@ type User struct {
 	ActivateToken  string
 	DeleteToken    string
 	CreateDatetime time.Time
+}
+
+func UnpackStruct(u interface{}) []interface{} {
+    val := reflect.ValueOf(u).Elem()
+    v := make([]interface{}, val.NumField())
+    for i := 0; i < val.NumField(); i++ {
+        valueField := val.Field(i)
+        v[i] = valueField.Addr().Interface()
+    }
+    return v
 }
 
 func CreateTable(db *sql.DB) error {
@@ -85,30 +96,14 @@ func GetByUsername(db *sql.DB, username string) (*User, error) {
 		return nil, err
 	}
 
-	var createDatetime string
-
-	user := &User{}
-	err = st.QueryRow(username).Scan(
-		&user.Id,
-		&user.Username,
-		&user.Email,
-		&user.PublicKey,
-		&user.Active,
-		&user.Deleted,
-		&user.ActivateToken,
-		&user.DeleteToken,
-		&createDatetime,
-	)
+	user := User{}
+	fieldPointers := UnpackStruct(&user)
+	err = st.QueryRow(username).Scan(fieldPointers...)
 	if err != nil {
 		return nil, err
 	}
-	parsedCreateDatetime, e := time.Parse(time.RFC3339, createDatetime)
-	if e != nil {
-		log.E(e.Error())
-		return nil, e
-	}
-	user.CreateDatetime = parsedCreateDatetime
-	return user, nil
+
+	return &user, nil
 }
 
 func Activate(db *sql.DB, username string) error {
