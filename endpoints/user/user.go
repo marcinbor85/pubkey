@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -24,6 +25,8 @@ import (
 
 const USERNAME_REGEX string = `[a-zA-Z0-9_-]{3,}`
 const ENDPOINT_NAME string = "user"
+
+const ACTIVATE_TOKEN_EXPIRE_DURATION = 30*time.Second
 
 func validateUsername(username string) bool {
 	rule := "^" + USERNAME_REGEX + "$"
@@ -181,6 +184,13 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		} else {
+			createTime := user.CreateDatetime
+			expireTime := createTime.Add(time.Duration(ACTIVATE_TOKEN_EXPIRE_DURATION))
+			if time.Now().UTC().After(expireTime) {
+				http.Error(w, "activate token expired", http.StatusNotFound)
+				return
+			}
+
 			err = mUser.Activate(database.DB, username)
 			if err != nil {
 				http.NotFound(w, r)
