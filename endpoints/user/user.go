@@ -26,7 +26,7 @@ import (
 const USERNAME_REGEX string = `[a-zA-Z0-9_-]{3,}`
 const ENDPOINT_NAME string = "user"
 
-const ACTIVATE_TOKEN_EXPIRE_DURATION = 1*time.Day
+const ACTIVATE_TOKEN_EXPIRE_DURATION = 24*time.Hours
 
 func validateUsername(username string) bool {
 	rule := "^" + USERNAME_REGEX + "$"
