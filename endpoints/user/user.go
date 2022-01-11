@@ -201,7 +201,7 @@ func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
 			createTime := user.CreateDatetime
 			expireTime := createTime.Add(time.Duration(ACTIVATE_TOKEN_EXPIRE_DURATION))
 			if time.Now().UTC().After(expireTime) {
-				http.Error(w, "activate token expired", http.StatusNotFound)
+				http.Error(w, "activate token expired", http.StatusGone)
 				return
 			}
 
