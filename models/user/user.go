@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"math/rand"
+	"strings"
 	"errors"
 	"reflect"
 	"time"
@@ -60,6 +61,9 @@ func CreateTable(db *sql.DB) error {
 }
 
 func Add(db *sql.DB, username string, email string, publickey string) (*User, error) {
+	username = strings.ToLower(username)
+	email = strings.ToLower(email)
+
 	user, err := GetByUsername(db, username)
 	if user != nil {
 		return nil, errors.New("user already exist")
@@ -89,6 +93,8 @@ func Add(db *sql.DB, username string, email string, publickey string) (*User, er
 }
 
 func GetByUsername(db *sql.DB, username string) (*User, error) {
+	username = strings.ToLower(username)
+
 	sqlText := `SELECT * FROM TblUser WHERE Deleted = 0 AND Username = ?`
 	st, err := db.Prepare(sqlText)
 	if err != nil {
@@ -107,6 +113,8 @@ func GetByUsername(db *sql.DB, username string) (*User, error) {
 }
 
 func Activate(db *sql.DB, username string) error {
+	username = strings.ToLower(username)
+
 	sqlText := `UPDATE TblUser SET Active = 1 WHERE Username = ? AND Deleted = 0`
 	st, err := db.Prepare(sqlText)
 
@@ -125,6 +133,8 @@ func Activate(db *sql.DB, username string) error {
 }
 
 func Delete(db *sql.DB, username string) error {
+	username = strings.ToLower(username)
+
 	sqlText := `UPDATE TblUser SET Deleted = 1 WHERE Username = ? AND Deleted = 0`
 	st, err := db.Prepare(sqlText)
 
