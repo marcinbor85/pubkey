@@ -23,8 +23,8 @@ import (
 	"regexp"
 )
 
-const USERNAME_REGEX string = `[a-zA-Z0-9_-]{3,}`
-const ENDPOINT_NAME string = "user"
+const USERNAME_REGEX string = `[a-z0-9_-]{3,32}`
+const ENDPOINT_NAME string = "users"
 
 const ACTIVATE_TOKEN_EXPIRE_DURATION = 24*time.Hour
 
@@ -45,6 +45,9 @@ func validateEmail(email string) bool {
 	}
 	domain := parts[1]
 	if len(domain) < 1 {
+		return false
+	}
+	if len(email) > 32 {
 		return false
 	}
 	return true
@@ -173,7 +176,7 @@ func getEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
-	d := map[string]string{"username": user.Username, "public_key": user.PublicKey}
+	d := map[string]string{"public_key": user.PublicKey}
 	enc.Encode(d)
 }
 
