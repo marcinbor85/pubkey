@@ -20,13 +20,16 @@ func homePageEndpoint(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles(config.Get("TEMPLATE_HOME_PAGE"))
 
 	host := config.Get("HOST")
+	title := config.Get("TEXT_HOMEPAGE_TITLE")
 
 	type PageContext struct {
 		HostAddress     string
+		Title           string
 	}
 
 	context := PageContext{
 		HostAddress:     host,
+		Title:			 title,
 	}
 
 	tmpl.Execute(w, context)
