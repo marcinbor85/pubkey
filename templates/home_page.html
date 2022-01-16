@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+	<head> 
+		<title>{{.HostAddress}}</title> 
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="static/index.css">
+	</head> 
+	<body>
+		<h2>Welcome to PubKey Service!</h2>
+		<p>
+			The service is used to share public keys used for secure encryption and verification of messages.<br>
+			This is an open-source project, so source code of this service You can found here: <a href="https://github.com/marcinbor85/pubkey">https://github.com/marcinbor85/pubkey</a>.<br>
+			The website works with the NES Messenger application, which is also open-source project: <a href="https://github.com/marcinbor85/nes">https://github.com/marcinbor85/nes</a>.<br>
+			This software is released under the MIT license.
+		</p>
+		<hr>
+		<p>
+			<h3>API:</h3>
+			<ul>
+				<li>
+					<h4>GET /users/&lt;username&gt;</h4>
+					<p>Get user public key</p>
+					<ul>
+						<li>
+							<h5>200 - OK</h5>
+							<pre>
+								{
+									&nbsp;&nbsp;&nbsp;&nbsp;"public_key": "&lt;PUBLIC_KEY_PEM_FORMAT&gt;"
+								}
+							</pre>
+						</li>
+						<li>
+							<h5>404 - User not found</h5>
+						</li>
+					</ul>
+				</li>
+				<li>
+					<h4>GET /users/&lt;username&gt;/&lt;token&gt;</h4>
+					<p>Security token to activate and deactivate user</p>
+					<ul>
+						<li>
+							<h5>200 - OK</h5>
+						</li>
+						<li>
+							<h5>404 - User/Token not found</h5>
+						</li>
+					</ul>
+				</li>
+				<li>
+					<h4>POST /users</h4>
+					<p>Register new user</p>
+					<pre>
+						{
+							&nbsp;&nbsp;&nbsp;&nbsp;"username": "&lt;USERNAME&gt;",
+							&nbsp;&nbsp;&nbsp;&nbsp;"email": "&lt;EMAIL&gt;",
+							&nbsp;&nbsp;&nbsp;&nbsp;"public_key": "&lt;PUBLIC_KEY_PEM_FORMAT&gt;"
+						}
+					</pre>
+					<ul>
+						<li>
+							<h5>201 - OK</h5>
+						</li>
+						<li>
+							<h5>400 - Bad request</h5>
+						</li>
+					</ul>
+				</li>
+			</ul>			
+		</p>
+		<hr>
+		<p>
+			The administrator reserves the right to disable the website at any time without warning.<br>
+		</p>
+	</body>
+</html>

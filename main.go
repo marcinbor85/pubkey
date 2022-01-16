@@ -9,6 +9,7 @@ import (
 	"github.com/marcinbor85/pubkey/database"
 	"github.com/marcinbor85/pubkey/tasks"
 	eUser "github.com/marcinbor85/pubkey/endpoints/user"
+	eHome "github.com/marcinbor85/pubkey/endpoints/home"
 	"github.com/marcinbor85/pubkey/log"
 
 	"github.com/gorilla/mux"
@@ -35,6 +36,7 @@ func main() {
 	router := mux.NewRouter()
 
 	eUser.Register(router)
+	eHome.Register(router)
 
 	http.Handle("/", router)
 	http.ListenAndServe("0.0.0.0:"+config.Get("PORT"), nil)
