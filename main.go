@@ -1,6 +1,7 @@
 package main
 
 import (
+	l "log"
 	"net/http"
 	"strconv"
 
@@ -17,7 +18,10 @@ import (
 )
 
 func main() {
-	config.Init(".env")
+	err := config.Init(".env")
+	if err != nil {
+		l.Panic(err)
+	}
 
 	lvl, _ := strconv.Atoi(config.Get("LOG_LEVEL"))
 	log.Init(log.LogLevel(lvl))

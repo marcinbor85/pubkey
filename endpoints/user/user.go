@@ -7,11 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"encoding/base64"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/google/uuid"
 
 	"github.com/marcinbor85/pubkey/config"
 	"github.com/marcinbor85/pubkey/crypto"
+	"github.com/marcinbor85/pubkey/crypto/rsa"
 	"github.com/marcinbor85/pubkey/database"
 	"github.com/marcinbor85/pubkey/email"
 	"github.com/marcinbor85/pubkey/log"
@@ -174,10 +177,44 @@ func getEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	type Data struct {
+		PublicKey		string `json:"public_key"`
+		Uuid		 	string `json:"uuid"`
+	}
+	
+	data := &Data{
+		PublicKey: user.PublicKey,
+		Uuid: uuid.New().String(),
+	}
+	text, err := json.Marshal(data)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	dataString := string(text)
+	
+	privateKey := config.G.PrivateKey
+	dataBin := []byte(dataString)
+	signature, err := rsa.Sign(dataBin, privateKey)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	signatureEncoded := base64.URLEncoding.EncodeToString(signature)
+
 	w.Header().Set("Content-Type", "application/json")
+
+	type Response struct {
+		Data		*Data `json:"response"`
+		Signature	string `json:"signature"`
+	}
+	response := &Response{
+		Data: data,
+		Signature: signatureEncoded,
+	}
+
 	enc := json.NewEncoder(w)
-	d := map[string]string{"public_key": user.PublicKey}
-	enc.Encode(d)
+	enc.Encode(response)
 }
 
 func tokenEndpoint(w http.ResponseWriter, r *http.Request) {
