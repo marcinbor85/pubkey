@@ -68,9 +68,10 @@ func Register(router *mux.Router) {
 
 func addEndpoint(w http.ResponseWriter, r *http.Request) {
 	type RegisterUser struct {
-		Username  string `json:"username"`
-		Email     string `json:"email"`
-		PublicKey string `json:"public_key"`
+		Username  		string `json:"username"`
+		Email     		string `json:"email"`
+		PublicKeyEncode string `json:"public_key_encode"`
+		PublicKeySign   string `json:"public_key_sign"`
 	}
 
 	var u RegisterUser
@@ -95,13 +96,24 @@ func addEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = crypto.DecodePublicKey(u.PublicKey)
+	if u.PublicKeyEncode == u.PublicKeySign {
+		http.Error(w, "both public keys are identical", http.StatusBadRequest)
+		return
+	}
+
+	_, err = crypto.DecodePublicKey(u.PublicKeyEncode)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	user, err := mUser.Add(database.DB, u.Username, u.Email, u.PublicKey)
+	_, err = crypto.DecodePublicKey(u.PublicKeySign)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	user, err := mUser.Add(database.DB, u.Username, u.Email, u.PublicKeyEncode, u.PublicKeySign)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -178,12 +190,14 @@ func getEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type Data struct {
-		PublicKey		string `json:"public_key"`
-		Uuid		 	string `json:"uuid"`
+		PublicKeyEncode		string `json:"public_key_encode"`
+		PublicKeySign		string `json:"public_key_sign"`
+		Uuid		 		string `json:"uuid"`
 	}
 	
 	data := &Data{
-		PublicKey: user.PublicKey,
+		PublicKeyEncode: user.PublicKeyEncode,
+		PublicKeySign: user.PublicKeySign,
 		Uuid: uuid.New().String(),
 	}
 	text, err := json.Marshal(data)
