@@ -10,7 +10,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/google/uuid"
 
 	"github.com/marcinbor85/pubkey/config"
 	"github.com/marcinbor85/pubkey/crypto"
@@ -192,13 +191,11 @@ func getEndpoint(w http.ResponseWriter, r *http.Request) {
 	type Data struct {
 		PublicKeyMessage		string `json:"public_key_message"`
 		PublicKeySign			string `json:"public_key_sign"`
-		Uuid		 			string `json:"uuid"`
 	}
 	
 	data := &Data{
 		PublicKeyMessage: user.PublicKeyMessage,
 		PublicKeySign: user.PublicKeySign,
-		Uuid: uuid.New().String(),
 	}
 	text, err := json.Marshal(data)
 	if err != nil {
