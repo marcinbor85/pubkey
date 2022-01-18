@@ -13,16 +13,16 @@ import (
 )
 
 type User struct {
-	Id             	int64
-	Username       	string
-	Email          	string
-	PublicKeyEncode	string
-	PublicKeySign	string
-	Active         	bool
-	Deleted        	bool
-	ActivateToken  	string
-	DeleteToken    	string
-	CreateDatetime 	time.Time
+	Id             		int64
+	Username       		string
+	Email          		string
+	PublicKeyMessage	string
+	PublicKeySign		string
+	Active         		bool
+	Deleted        		bool
+	ActivateToken  		string
+	DeleteToken    		string
+	CreateDatetime 		time.Time
 }
 
 func UnpackStruct(u interface{}) []interface{} {
@@ -40,7 +40,7 @@ func CreateTable(db *sql.DB) error {
 		"Id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,		
 		"Username" TEXT,
 		"Email" TEXT,
-		"PublicKeyEncode" TEXT,
+		"PublicKeyMessage" TEXT,
 		"PublicKeySign" TEXT,
 		"Active" INTEGER DEFAULT 0,
 		"Deleted" INTEGER DEFAULT 0,
@@ -62,7 +62,7 @@ func CreateTable(db *sql.DB) error {
 	return nil
 }
 
-func Add(db *sql.DB, username string, email string, publickeyEncode string, publickeySign string) (*User, error) {
+func Add(db *sql.DB, username string, email string, publicKeyMessage string, publickeySign string) (*User, error) {
 	username = strings.ToLower(username)
 	email = strings.ToLower(email)
 
@@ -71,7 +71,7 @@ func Add(db *sql.DB, username string, email string, publickeyEncode string, publ
 		return nil, errors.New("user already exist")
 	}
 
-	sqlText := `INSERT INTO TblUser (Username, Email, PublicKeyEncode, PublicKeySign, ActivateToken, DeleteToken) VALUES (?,?,?,?,?,?)`
+	sqlText := `INSERT INTO TblUser (Username, Email, PublicKeyMessage, PublicKeySign, ActivateToken, DeleteToken) VALUES (?,?,?,?,?,?)`
 	st, err := db.Prepare(sqlText)
 	if err != nil {
 		log.E(err.Error())
@@ -84,7 +84,7 @@ func Add(db *sql.DB, username string, email string, publickeyEncode string, publ
 	rand.Read(tokenArray)
 	delToken := base64.URLEncoding.EncodeToString(tokenArray)
 
-	_, err = st.Exec(username, email, publickeyEncode, publickeySign, actToken, delToken)
+	_, err = st.Exec(username, email, publicKeyMessage, publickeySign, actToken, delToken)
 	if err != nil {
 		log.E(err.Error())
 		return nil, err
